@@ -1,183 +1,94 @@
 <script>
   import { onMount } from 'svelte';
+  import AppHeader from './components/AppHeader.svelte';
+  import StateCard from './components/StateCard.svelte';
+  import { api } from './lib/api.js';
+  import { currentPath, navigate, startRouter } from './lib/router.js';
+  import AdminPage from './pages/AdminPage.svelte';
+  import HomePage from './pages/HomePage.svelte';
+  import LandingPage from './pages/LandingPage.svelte';
+  import ProblemsPage from './pages/ProblemsPage.svelte';
+  import TicketDetailPage from './pages/TicketDetailPage.svelte';
+  import TicketFormPage from './pages/TicketFormPage.svelte';
+  import TicketListPage from './pages/TicketListPage.svelte';
+
+  const sessionKey = 'sts_user_id';
 
   let users = [];
-  let tickets = [];
-  let selectedUserId = '';
+  let currentUser = null;
+  let initialised = false;
   let loadingUsers = true;
-  let loadingTickets = false;
-  let errorMessage = '';
+  let usersError = '';
 
-  const statusLabels = {
-    open: 'Aberto',
-    in_progress: 'Em resolução',
-    closed: 'Fechado'
-  };
-
-  async function getJson(url) {
-    const response = await fetch(url);
-    if (!response.ok) {
-      let detail = 'O servidor devolveu uma resposta inesperada.';
-      try {
-        const body = await response.json();
-        detail = body.detail ?? detail;
-      } catch {
-        // A mensagem genérica é suficiente quando a resposta não contém JSON.
-      }
-      throw new Error(detail);
-    }
-    return response.json();
-  }
+  $: ticketMatch = $currentPath.match(/^\/tickets\/([0-9a-f-]{36})$/i);
+  $: if (initialised && !currentUser && $currentPath !== '/') navigate('/', { replace: true });
+  $: if (initialised && currentUser && $currentPath === '/') navigate('/home', { replace: true });
 
   async function loadUsers() {
     loadingUsers = true;
-    errorMessage = '';
-
+    usersError = '';
     try {
-      users = await getJson('/api/users');
-      selectedUserId = users[0]?.id ?? '';
-      if (selectedUserId) {
-        await loadTickets();
-      }
+      users = await api.users();
+      const storedUserId = localStorage.getItem(sessionKey);
+      currentUser = users.find((user) => user.id === storedUserId) ?? null;
+      if (storedUserId && !currentUser) localStorage.removeItem(sessionKey);
     } catch (error) {
-      errorMessage = error.message;
+      usersError = error.message;
     } finally {
       loadingUsers = false;
+      initialised = true;
     }
   }
 
-  async function loadTickets() {
-    if (!selectedUserId) {
-      tickets = [];
-      return;
-    }
-
-    loadingTickets = true;
-    errorMessage = '';
-
-    try {
-      tickets = await getJson(
-        `/api/tickets?user_id=${encodeURIComponent(selectedUserId)}`
-      );
-    } catch (error) {
-      tickets = [];
-      errorMessage = error.message;
-    } finally {
-      loadingTickets = false;
-    }
+  function login(userId) {
+    const user = users.find((candidate) => candidate.id === userId);
+    if (!user) return;
+    currentUser = user;
+    localStorage.setItem(sessionKey, user.id);
+    navigate('/home', { replace: true });
   }
 
-  function formatDate(value) {
-    return new Intl.DateTimeFormat('pt-PT', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
-    }).format(new Date(value));
+  function logout() {
+    localStorage.removeItem(sessionKey);
+    currentUser = null;
+    navigate('/', { replace: true });
   }
 
-  onMount(loadUsers);
+  onMount(() => {
+    const stopRouter = startRouter();
+    loadUsers();
+    return stopRouter;
+  });
 </script>
 
 <svelte:head>
   <title>Streamlined Ticket System</title>
-  <meta
-    name="description"
-    content="Consulta simples de tickets por utilizador."
-  />
+  <meta name="description" content="Gestão simplificada de tickets de suporte." />
 </svelte:head>
 
-<header class="app-header">
-  <div class="brand">
-    <span class="brand-mark" aria-hidden="true">STS</span>
-    <div>
-      <p class="eyebrow">Support &amp; Engineering</p>
-      <h1>Streamlined Ticket System</h1>
-    </div>
-  </div>
-
-  <label class="user-selector">
-    <span>Utilizador atual</span>
-    <select
-      bind:value={selectedUserId}
-      onchange={loadTickets}
-      disabled={loadingUsers || users.length === 0}
-    >
-      {#each users as user}
-        <option value={user.id}>{user.name} · {user.department}</option>
-      {/each}
-    </select>
-  </label>
-</header>
-
-<main>
-  <section class="page-intro" aria-labelledby="tickets-heading">
-    <div>
-      <p class="eyebrow">Visão pessoal</p>
-      <h2 id="tickets-heading">Os meus tickets</h2>
-      <p>Pedidos abertos pelo utilizador selecionado.</p>
-    </div>
-    {#if !loadingUsers && selectedUserId}
-      <span class="ticket-count">
-        {tickets.length} {tickets.length === 1 ? 'ticket' : 'tickets'}
-      </span>
+{#if !initialised || (loadingUsers && $currentPath !== '/')}
+  <main class="standalone-state"><StateCard title="A iniciar aplicação…" tone="loading" /></main>
+{:else if !currentUser}
+  <LandingPage {users} loading={loadingUsers} error={usersError} onLogin={login} onRetry={loadUsers} />
+{:else}
+  <AppHeader {currentUser} onLogout={logout} />
+  <main class="app-main">
+    {#if $currentPath === '/home'}
+      <HomePage {currentUser} />
+    {:else if $currentPath === '/tickets/new'}
+      <TicketFormPage {currentUser} />
+    {:else if $currentPath === '/tickets/open'}
+      {#key $currentPath}<TicketListPage {currentUser} view="open" />{/key}
+    {:else if $currentPath === '/tickets/history'}
+      {#key $currentPath}<TicketListPage {currentUser} view="history" />{/key}
+    {:else if ticketMatch}
+      {#key ticketMatch[1]}<TicketDetailPage {currentUser} ticketId={ticketMatch[1]} />{/key}
+    {:else if $currentPath === '/problems'}
+      <ProblemsPage {currentUser} />
+    {:else if $currentPath === '/admin'}
+      <AdminPage {currentUser} />
+    {:else}
+      <StateCard title="Página não encontrada." message="O endereço indicado não pertence a esta aplicação." buttonLabel="Voltar à Home" onAction={() => navigate('/home')} />
     {/if}
-  </section>
-
-  {#if loadingUsers || loadingTickets}
-    <section class="state-card" aria-live="polite">
-      <span class="spinner" aria-hidden="true"></span>
-      <p>A carregar informação…</p>
-    </section>
-  {:else if errorMessage}
-    <section class="state-card error" role="alert">
-      <strong>Não foi possível carregar os tickets.</strong>
-      <p>{errorMessage}</p>
-      <button type="button" onclick={loadUsers}>Tentar novamente</button>
-    </section>
-  {:else if users.length === 0}
-    <section class="state-card">
-      <strong>Não existem utilizadores disponíveis.</strong>
-      <p>Confirma se os dados de teste foram inseridos no Supabase.</p>
-    </section>
-  {:else if tickets.length === 0}
-    <section class="state-card">
-      <strong>Sem tickets para apresentar.</strong>
-      <p>Este utilizador ainda não abriu nenhum pedido.</p>
-    </section>
-  {:else}
-    <section class="ticket-grid" aria-label="Lista de tickets">
-      {#each tickets as ticket}
-        <article class="ticket-card">
-          <div class="ticket-topline">
-            <span class="category">{ticket.category}</span>
-            <span class:open={ticket.status === 'open'}
-              class:in-progress={ticket.status === 'in_progress'}
-              class:closed={ticket.status === 'closed'}
-              class="status"
-            >
-              {statusLabels[ticket.status]}
-            </span>
-          </div>
-
-          <h3>{ticket.description}</h3>
-
-          <dl>
-            <div>
-              <dt>Aberto por</dt>
-              <dd>{ticket.opened_by}</dd>
-            </div>
-            <div>
-              <dt>Data de abertura</dt>
-              <dd>{formatDate(ticket.opened_at)}</dd>
-            </div>
-            <div>
-              <dt>Tratado por</dt>
-              <dd>{ticket.handled_by ?? 'Por atribuir'}</dd>
-            </div>
-          </dl>
-
-          <p class="ticket-id">ID {ticket.id}</p>
-        </article>
-      {/each}
-    </section>
-  {/if}
-</main>
+  </main>
+{/if}

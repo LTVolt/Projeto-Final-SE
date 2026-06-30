@@ -16,6 +16,17 @@ create table if not exists public.categories (
     description text not null
 );
 
+create table if not exists public.solutions (
+    id uuid primary key default gen_random_uuid(),
+    category_id uuid not null,
+    title text not null unique,
+    symptoms text not null,
+    resolution_steps text not null,
+    created_at timestamptz not null default now(),
+    constraint solutions_category_id_fkey
+        foreign key (category_id) references public.categories(id)
+);
+
 create table if not exists public.tickets (
     id uuid primary key default gen_random_uuid(),
     category_id uuid not null,
@@ -47,9 +58,12 @@ create index if not exists tickets_category_id_idx
     on public.tickets (category_id);
 create index if not exists tickets_status_idx
     on public.tickets (status);
+create index if not exists solutions_category_id_idx
+    on public.solutions (category_id);
 
 alter table public.users enable row level security;
 alter table public.categories enable row level security;
+alter table public.solutions enable row level security;
 alter table public.tickets enable row level security;
 
 commit;
