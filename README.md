@@ -8,9 +8,10 @@ uma API FastAPI; apenas o backend acede ao Supabase.
 - Entrada simulada através de um utilizador existente, sem palavra-passe.
 - Home comum com acessos a abertura, tickets ativos, histórico e soluções.
 - Colaborador: cria e consulta os próprios tickets.
-- Helpdesk: consulta todos os tickets, assume pedidos e fecha os que lhe estão atribuídos.
+- Helpdesk: consulta todos os tickets, tem uma fila dos assumidos e regista uma nota obrigatória ao fechar.
 - Administrador: métricas e CRUD completo de tickets.
 - Base de soluções ligada às categorias de tickets.
+- Conjunto de 50 tickets adicionais para demonstração de volume e estados.
 
 Não existe autenticação real, JWT ou OAuth. O header `X-User-Id` simula a
 identidade apenas para este MVP de formação.
@@ -23,10 +24,11 @@ Executar no **Supabase SQL Editor**:
 
 ```text
 supabase/migrations/002_solutions.sql
+supabase/migrations/003_helpdesk_resolution_and_ticket_volume.sql
 ```
 
-Esta migração cria a tabela `solutions`, ativa RLS e insere três soluções de
-teste. Pode ser executada novamente sem duplicar esses registos.
+As migrações criam a base de soluções, acrescentam a nota de resolução e inserem
+50 tickets variados. Podem ser executadas novamente sem duplicar os registos.
 
 ### Instalação nova
 
@@ -38,7 +40,7 @@ Executar pela ordem:
 Em PowerShell, um ficheiro pode ser copiado para a área de transferência com:
 
 ```powershell
-Get-Content -Raw .\supabase\migrations\002_solutions.sql | Set-Clipboard
+Get-Content -Raw .\supabase\migrations\003_helpdesk_resolution_and_ticket_volume.sql | Set-Clipboard
 ```
 
 ## 2. Configurar o ambiente local
@@ -103,7 +105,7 @@ exigem `X-User-Id`:
 
 - `GET /api/categories`
 - `GET /api/solutions`
-- `GET /api/tickets?view=open|history|all`
+- `GET /api/tickets?view=open|history|assigned|all`
 - `GET /api/tickets/{id}`
 - `POST /api/tickets`
 - `PATCH /api/tickets/{id}`
@@ -119,6 +121,10 @@ $users = Invoke-RestMethod http://127.0.0.1:8000/api/users
 $headers = @{ 'X-User-Id' = $users[0].id }
 Invoke-RestMethod 'http://127.0.0.1:8000/api/tickets?view=open' -Headers $headers
 ```
+
+O fecho exige um corpo JSON com `resolution_note`. A vista `assigned` está
+disponível apenas para helpdesk e devolve os tickets em resolução atribuídos ao
+utilizador indicado no header.
 
 ## 6. Vercel
 

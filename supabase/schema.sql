@@ -37,6 +37,7 @@ create table if not exists public.tickets (
         check (status in ('open', 'in_progress', 'closed')),
     opened_at timestamptz not null default now(),
     resolved_at timestamptz,
+    resolution_note text,
     constraint tickets_category_id_fkey
         foreign key (category_id) references public.categories(id),
     constraint tickets_opened_by_fkey
@@ -44,8 +45,17 @@ create table if not exists public.tickets (
     constraint tickets_handled_by_fkey
         foreign key (handled_by) references public.users(id),
     constraint tickets_resolution_state_check check (
-        (status = 'closed' and resolved_at is not null)
-        or (status <> 'closed' and resolved_at is null)
+        (
+            status = 'closed'
+            and resolved_at is not null
+            and resolution_note is not null
+            and char_length(trim(resolution_note)) >= 5
+        )
+        or (
+            status <> 'closed'
+            and resolved_at is null
+            and resolution_note is null
+        )
     ),
     constraint tickets_resolution_date_check check (
         resolved_at is null or resolved_at >= opened_at

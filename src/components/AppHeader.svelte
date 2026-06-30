@@ -34,6 +34,11 @@
     >
       {quickActions[currentUser.type].label}
     </a>
+    {#if currentUser.type === 'helpdesk'}
+      <a class="quick-link secondary-quick-link" href="/tickets/assigned" onclick={(event) => go(event, '/tickets/assigned')}>
+        Meus assumidos
+      </a>
+    {/if}
     <div class="user-chip">
       <span>{currentUser.name}</span>
       <small>{roleLabels[currentUser.type]}</small>

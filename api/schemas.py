@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 UserType = Literal["common", "helpdesk", "admin"]
 TicketStatus = Literal["open", "in_progress", "closed"]
-TicketView = Literal["open", "history", "all"]
+TicketView = Literal["open", "history", "assigned", "all"]
 
 
 class UserOut(BaseModel):
@@ -49,6 +49,7 @@ class TicketOut(BaseModel):
     status: TicketStatus
     opened_at: datetime
     resolved_at: datetime | None
+    resolution_note: str | None
 
 
 class TicketCreate(BaseModel):
@@ -57,6 +58,7 @@ class TicketCreate(BaseModel):
     opened_by: UUID | None = None
     handled_by: UUID | None = None
     status: TicketStatus = "open"
+    resolution_note: str | None = Field(default=None, max_length=4000)
 
 
 class TicketUpdate(BaseModel):
@@ -65,12 +67,17 @@ class TicketUpdate(BaseModel):
     handled_by: UUID | None = None
     description: str | None = Field(default=None, min_length=5, max_length=2000)
     status: TicketStatus | None = None
+    resolution_note: str | None = Field(default=None, max_length=4000)
 
     @model_validator(mode="after")
     def require_change(self) -> "TicketUpdate":
         if not self.model_fields_set:
             raise ValueError("É necessário indicar pelo menos uma alteração.")
         return self
+
+
+class TicketClose(BaseModel):
+    resolution_note: str = Field(min_length=5, max_length=4000)
 
 
 class CategoryMetric(BaseModel):

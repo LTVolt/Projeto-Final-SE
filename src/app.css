@@ -348,6 +348,12 @@ dd {
   text-decoration: none;
 }
 
+.secondary-quick-link {
+  color: #dce5f3;
+  background: transparent;
+  border: 1px solid #53617b;
+}
+
 .ghost-button {
   color: #e7edf7;
   background: transparent;
@@ -409,6 +415,30 @@ dd {
   font-size: 0.78rem;
   font-weight: 750;
   white-space: nowrap;
+}
+
+.ticket-tabs {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin: -0.8rem 0 1.5rem;
+  padding: 0.3rem;
+  background: #e7ebf2;
+  border-radius: 0.65rem;
+}
+
+.ticket-tabs a {
+  padding: 0.55rem 0.8rem;
+  color: #59667d;
+  border-radius: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.ticket-tabs a.active {
+  color: #172033;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(28, 39, 61, 0.08);
 }
 
 .primary-button,
@@ -719,13 +749,12 @@ input:focus-visible {
 .detail-card h1 {
   max-width: 54rem;
   margin: 0.6rem 0 2rem;
-  font-size: clamp(1.7rem, 4vw, 2.6rem);
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
   line-height: 1.25;
 }
 
 .detail-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
 .detail-grid div {
@@ -736,6 +765,36 @@ input:focus-visible {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #e2e7ef;
+}
+
+.resolution-note {
+  margin-top: 1.4rem;
+  padding: 1.2rem;
+  color: #214f49;
+  background: #e5f6f2;
+  border-radius: 0.7rem;
+}
+
+.resolution-note h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.resolution-note p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.close-form {
+  display: grid;
+  max-width: 680px;
+  gap: 0.55rem;
+}
+
+.close-form label {
+  color: #3d4a62;
+  font-size: 0.8rem;
+  font-weight: 750;
 }
 
 /* Solutions */

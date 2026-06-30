@@ -12,6 +12,7 @@ from api.schemas import (
     CategoryOut,
     MetricsOut,
     SolutionOut,
+    TicketClose,
     TicketCreate,
     TicketOut,
     TicketUpdate,
@@ -22,7 +23,7 @@ from api.tickets import DatabaseError, TicketRepository
 
 settings = get_settings()
 
-app = FastAPI(title="Streamlined Ticket System API", version="0.2.0")
+app = FastAPI(title="Streamlined Ticket System API", version="0.3.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[str(settings.public_app_url).rstrip("/")],
@@ -112,6 +113,8 @@ def list_tickets(
     current_user: CurrentUser,
     view: TicketView = Query(default="open"),
 ) -> list[TicketOut]:
+    if view == "assigned":
+        require_role(current_user, "helpdesk")
     return get_repository().list_tickets(view, current_user)
 
 
@@ -138,6 +141,7 @@ def create_ticket(payload: TicketCreate, current_user: CurrentUser) -> TicketOut
             "description": payload.description.strip(),
             "status": "open",
             "resolved_at": None,
+            "resolution_note": None,
         }
         return repository.create_ticket(values)
 
@@ -149,6 +153,11 @@ def create_ticket(payload: TicketCreate, current_user: CurrentUser) -> TicketOut
         raise HTTPException(status_code=409, detail="Este estado exige um responsável.")
     if payload.handled_by is not None:
         require_user(repository, payload.handled_by, helpdesk_only=True)
+    resolution_note = payload.resolution_note.strip() if payload.resolution_note else None
+    if payload.status == "closed" and (
+        resolution_note is None or len(resolution_note) < 5
+    ):
+        raise HTTPException(status_code=409, detail="Um ticket fechado exige uma nota de resolução.")
 
     values = {
         "category_id": str(payload.category_id),
@@ -161,6 +170,7 @@ def create_ticket(payload: TicketCreate, current_user: CurrentUser) -> TicketOut
             if payload.status == "closed"
             else None
         ),
+        "resolution_note": resolution_note if payload.status == "closed" else None,
     }
     return repository.create_ticket(values)
 
@@ -185,12 +195,19 @@ def update_ticket(
 
     resulting_status = changes.get("status", ticket.status)
     resulting_handler = changes.get("handled_by", ticket.handled_by_id)
+    resulting_note = changes.get("resolution_note", ticket.resolution_note)
+    if resulting_note is not None:
+        resulting_note = resulting_note.strip()
     if resulting_status == "open" and resulting_handler is not None:
         raise HTTPException(status_code=409, detail="Um ticket aberto não pode ter responsável.")
     if resulting_status != "open" and resulting_handler is None:
         raise HTTPException(status_code=409, detail="Este estado exige um responsável.")
     if resulting_handler is not None:
         require_user(repository, resulting_handler, helpdesk_only=True)
+    if resulting_status == "closed" and (
+        not resulting_note or len(resulting_note) < 5
+    ):
+        raise HTTPException(status_code=409, detail="Um ticket fechado exige uma nota de resolução.")
 
     values = {
         key: str(value) if isinstance(value, UUID) else value
@@ -199,10 +216,12 @@ def update_ticket(
     if "description" in values:
         values["description"] = values["description"].strip()
     if resulting_status == "closed":
+        values["resolution_note"] = resulting_note
         if ticket.status != "closed":
             values["resolved_at"] = datetime.now(timezone.utc).isoformat()
     else:
         values["resolved_at"] = None
+        values["resolution_note"] = None
     return repository.update_ticket(ticket_id, values)
 
 
@@ -236,7 +255,11 @@ def assign_ticket(ticket_id: UUID, current_user: CurrentUser) -> TicketOut:
 
 
 @app.post("/api/tickets/{ticket_id}/close", response_model=TicketOut)
-def close_ticket(ticket_id: UUID, current_user: CurrentUser) -> TicketOut:
+def close_ticket(
+    ticket_id: UUID,
+    payload: TicketClose,
+    current_user: CurrentUser,
+) -> TicketOut:
     require_role(current_user, "helpdesk")
     repository = get_repository()
     ticket = repository.get_ticket(ticket_id)
@@ -253,6 +276,7 @@ def close_ticket(ticket_id: UUID, current_user: CurrentUser) -> TicketOut:
         {
             "status": "closed",
             "resolved_at": datetime.now(timezone.utc).isoformat(),
+            "resolution_note": payload.resolution_note.strip(),
         },
     )
 

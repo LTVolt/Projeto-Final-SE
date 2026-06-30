@@ -13,6 +13,8 @@
   let actionLoading = false;
   let error = '';
   let actionError = '';
+  let showCloseForm = false;
+  let resolutionNote = '';
 
   async function loadTicket() {
     loading = true;
@@ -27,12 +29,20 @@
   }
 
   async function performAction(action) {
+    if (action === 'close' && resolutionNote.trim().length < 5) {
+      actionError = 'Descreva a resolução com pelo menos 5 caracteres.';
+      return;
+    }
     actionLoading = true;
     actionError = '';
     try {
       ticket = action === 'assign'
         ? await api.assignTicket(currentUser.id, ticketId)
-        : await api.closeTicket(currentUser.id, ticketId);
+        : await api.closeTicket(currentUser.id, ticketId, resolutionNote.trim());
+      if (action === 'close') {
+        showCloseForm = false;
+        resolutionNote = '';
+      }
     } catch (requestError) {
       actionError = requestError.message;
     } finally {
@@ -65,12 +75,30 @@
       <div><dt>Resolvido em</dt><dd>{formatDate(ticket.resolved_at)}</dd></div>
     </dl>
 
+    {#if ticket.resolution_note}
+      <section class="resolution-note">
+        <h2>Resolução</h2>
+        <p>{ticket.resolution_note}</p>
+      </section>
+    {/if}
+
     {#if currentUser.type === 'helpdesk' && ticket.status !== 'closed'}
       <div class="detail-actions">
         {#if ticket.status === 'open' && !ticket.handled_by_id}
           <button class="primary-button" type="button" disabled={actionLoading} onclick={() => performAction('assign')}>Assumir ticket</button>
         {:else if ticket.handled_by_id === currentUser.id && ticket.status === 'in_progress'}
-          <button class="primary-button" type="button" disabled={actionLoading} onclick={() => performAction('close')}>Fechar ticket</button>
+          {#if !showCloseForm}
+            <button class="primary-button" type="button" disabled={actionLoading} onclick={() => { showCloseForm = true; actionError = ''; }}>Fechar ticket</button>
+          {:else}
+            <form class="close-form" onsubmit={(event) => { event.preventDefault(); performAction('close'); }}>
+              <label for="resolution-note">Como foi resolvido?</label>
+              <textarea id="resolution-note" bind:value={resolutionNote} minlength="5" maxlength="4000" rows="5" required placeholder="Descreva a solução aplicada e qualquer informação útil."></textarea>
+              <div class="form-actions">
+                <button class="secondary-button" type="button" onclick={() => { showCloseForm = false; resolutionNote = ''; actionError = ''; }}>Cancelar</button>
+                <button class="primary-button" type="submit" disabled={actionLoading}>{actionLoading ? 'A fechar…' : 'Confirmar fecho'}</button>
+              </div>
+            </form>
+          {/if}
         {:else}
           <p>Este ticket está atribuído a outro elemento do helpdesk.</p>
         {/if}

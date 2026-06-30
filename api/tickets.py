@@ -20,7 +20,7 @@ class DatabaseError(RuntimeError):
 
 class TicketRepository:
     ticket_fields = (
-        "id,category_id,opened_by,handled_by,description,status,opened_at,resolved_at,"
+        "id,category_id,opened_by,handled_by,description,status,opened_at,resolved_at,resolution_note,"
         "category:categories!tickets_category_id_fkey(name),"
         "opened_by_user:users!tickets_opened_by_fkey(name),"
         "handled_by_user:users!tickets_handled_by_fkey(name)"
@@ -115,7 +115,11 @@ class TicketRepository:
             query = self.client.table("tickets").select(self.ticket_fields)
             if current_user.type == "common":
                 query = query.eq("opened_by", str(current_user.id))
-            if view == "open":
+            if view == "assigned":
+                query = query.eq("handled_by", str(current_user.id)).eq(
+                    "status", "in_progress"
+                )
+            elif view == "open":
                 query = query.in_("status", ["open", "in_progress"])
             elif view == "history":
                 query = query.eq("status", "closed")
@@ -217,4 +221,5 @@ class TicketRepository:
             status=row["status"],
             opened_at=row["opened_at"],
             resolved_at=row.get("resolved_at"),
+            resolution_note=row.get("resolution_note"),
         )

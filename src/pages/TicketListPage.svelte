@@ -3,6 +3,7 @@
   import StateCard from '../components/StateCard.svelte';
   import TicketCard from '../components/TicketCard.svelte';
   import { api } from '../lib/api.js';
+  import { navigate } from '../lib/router.js';
 
   export let currentUser;
   export let view;
@@ -12,10 +13,18 @@
   let error = '';
 
   $: isHistory = view === 'history';
-  $: title = isHistory ? 'Histórico de Tickets' : 'Tickets Abertos';
-  $: description = currentUser.type === 'common'
-    ? isHistory ? 'Os seus pedidos concluídos.' : 'Os seus pedidos abertos e em resolução.'
-    : isHistory ? 'Todos os pedidos concluídos.' : 'Todos os pedidos abertos e em resolução.';
+  $: isAssigned = view === 'assigned';
+  $: title = isAssigned ? 'Meus Tickets Assumidos' : isHistory ? 'Histórico de Tickets' : 'Tickets Abertos';
+  $: description = isAssigned
+    ? 'Pedidos em resolução atribuídos a si.'
+    : currentUser.type === 'common'
+      ? isHistory ? 'Os seus pedidos concluídos.' : 'Os seus pedidos abertos e em resolução.'
+      : isHistory ? 'Todos os pedidos concluídos.' : 'Todos os pedidos abertos e em resolução.';
+
+  function go(event, path) {
+    event.preventDefault();
+    navigate(path);
+  }
 
   async function loadTickets() {
     loading = true;
@@ -41,12 +50,19 @@
   {#if !loading && !error}<span class="count-pill">{tickets.length} tickets</span>{/if}
 </section>
 
+{#if currentUser.type === 'helpdesk' && !isHistory}
+  <nav class="ticket-tabs" aria-label="Filtrar tickets de helpdesk">
+    <a class:active={!isAssigned} href="/tickets/open" onclick={(event) => go(event, '/tickets/open')}>Todos os ativos</a>
+    <a class:active={isAssigned} href="/tickets/assigned" onclick={(event) => go(event, '/tickets/assigned')}>Assumidos por mim</a>
+  </nav>
+{/if}
+
 {#if loading}
   <StateCard title="A carregar tickets…" tone="loading" />
 {:else if error}
   <StateCard title="Não foi possível carregar os tickets." message={error} tone="error" buttonLabel="Tentar novamente" onAction={loadTickets} />
 {:else if tickets.length === 0}
-  <StateCard title={isHistory ? 'Ainda não existem tickets concluídos.' : 'Não existem tickets ativos.'} message="Quando houver informação, ela aparecerá aqui." />
+  <StateCard title={isAssigned ? 'Não tem tickets assumidos.' : isHistory ? 'Ainda não existem tickets concluídos.' : 'Não existem tickets ativos.'} message="Quando houver informação, ela aparecerá aqui." />
 {:else}
   <section class="ticket-grid" aria-label={title}>
     {#each tickets as ticket}<TicketCard {ticket} />{/each}

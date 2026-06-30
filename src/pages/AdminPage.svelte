@@ -27,7 +27,8 @@
       opened_by: '',
       handled_by: '',
       description: '',
-      status: 'open'
+      status: 'open',
+      resolution_note: ''
     };
   }
 
@@ -72,7 +73,8 @@
       opened_by: ticket.opened_by_id,
       handled_by: ticket.handled_by_id ?? '',
       description: ticket.description,
-      status: ticket.status
+      status: ticket.status,
+      resolution_note: ticket.resolution_note ?? ''
     };
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -85,6 +87,7 @@
 
   function handleStatusChange() {
     if (form.status === 'open') form.handled_by = '';
+    if (form.status !== 'closed') form.resolution_note = '';
   }
 
   async function submitForm() {
@@ -95,7 +98,8 @@
       opened_by: form.opened_by,
       handled_by: form.handled_by || null,
       description: form.description,
-      status: form.status
+      status: form.status,
+      resolution_note: form.status === 'closed' ? form.resolution_note : null
     };
     try {
       if (formMode === 'create') {
@@ -178,6 +182,11 @@
       <label>Descrição
         <textarea bind:value={form.description} minlength="5" maxlength="2000" rows="4" required></textarea>
       </label>
+      {#if form.status === 'closed'}
+        <label>Nota de resolução
+          <textarea bind:value={form.resolution_note} minlength="5" maxlength="4000" rows="4" required placeholder="Descreva como o ticket foi resolvido."></textarea>
+        </label>
+      {/if}
       {#if formError}<p class="form-error" role="alert">{formError}</p>{/if}
       <div class="form-actions">
         <button class="secondary-button" type="button" onclick={cancelForm}>Cancelar</button>

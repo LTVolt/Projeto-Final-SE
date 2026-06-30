@@ -81,6 +81,8 @@
       {#key $currentPath}<TicketListPage {currentUser} view="open" />{/key}
     {:else if $currentPath === '/tickets/history'}
       {#key $currentPath}<TicketListPage {currentUser} view="history" />{/key}
+    {:else if $currentPath === '/tickets/assigned'}
+      {#key $currentPath}<TicketListPage {currentUser} view="assigned" />{/key}
     {:else if ticketMatch}
       {#key ticketMatch[1]}<TicketDetailPage {currentUser} ticketId={ticketMatch[1]} />{/key}
     {:else if $currentPath === '/problems'}

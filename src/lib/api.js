@@ -46,7 +46,11 @@ export const api = {
     request(`/api/tickets/${ticketId}`, { userId, method: 'DELETE' }),
   assignTicket: (userId, ticketId) =>
     request(`/api/tickets/${ticketId}/assign`, { userId, method: 'POST' }),
-  closeTicket: (userId, ticketId) =>
-    request(`/api/tickets/${ticketId}/close`, { userId, method: 'POST' }),
+  closeTicket: (userId, ticketId, resolutionNote) =>
+    request(`/api/tickets/${ticketId}/close`, {
+      userId,
+      method: 'POST',
+      body: { resolution_note: resolutionNote }
+    }),
   metrics: (userId) => request('/api/metrics', { userId })
 };
