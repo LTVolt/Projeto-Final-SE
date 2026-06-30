@@ -1,0 +1,309 @@
+:root {
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #172033;
+  background: #f4f6fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.25rem max(1.5rem, calc((100vw - 1120px) / 2));
+  color: #ffffff;
+  background: #18233d;
+  border-bottom: 3px solid #55c1b3;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.brand-mark {
+  display: grid;
+  width: 2.9rem;
+  height: 2.9rem;
+  place-items: center;
+  color: #18233d;
+  background: #72d9ca;
+  border-radius: 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  color: #66728a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-header .eyebrow {
+  color: #a9b6ce;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+}
+
+h2 {
+  margin-bottom: 0.45rem;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  letter-spacing: -0.035em;
+}
+
+.user-selector {
+  display: grid;
+  gap: 0.4rem;
+  min-width: min(100%, 19rem);
+  color: #dbe4f3;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.user-selector select {
+  width: 100%;
+  padding: 0.68rem 2.2rem 0.68rem 0.8rem;
+  color: #172033;
+  background: #ffffff;
+  border: 1px solid #ccd5e3;
+  border-radius: 0.55rem;
+}
+
+.user-selector select:focus-visible,
+button:focus-visible {
+  outline: 3px solid rgba(114, 217, 202, 0.55);
+  outline-offset: 2px;
+}
+
+main {
+  width: min(1120px, calc(100% - 3rem));
+  margin: 0 auto;
+  padding: 3.5rem 0 5rem;
+}
+
+.page-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.8rem;
+}
+
+.page-intro p:last-child {
+  margin-bottom: 0;
+  color: #66728a;
+}
+
+.ticket-count {
+  padding: 0.45rem 0.75rem;
+  color: #40506b;
+  background: #e5eaf2;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 1rem;
+}
+
+.ticket-card,
+.state-card {
+  background: #ffffff;
+  border: 1px solid #dfe5ee;
+  border-radius: 0.9rem;
+  box-shadow: 0 8px 28px rgba(28, 39, 61, 0.06);
+}
+
+.ticket-card {
+  display: flex;
+  min-height: 260px;
+  flex-direction: column;
+  padding: 1.25rem;
+}
+
+.ticket-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.category {
+  color: #526078;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status {
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.status.open {
+  color: #7b3e00;
+  background: #fff0d9;
+}
+
+.status.in-progress {
+  color: #124c75;
+  background: #dceffd;
+}
+
+.status.closed {
+  color: #176346;
+  background: #dcf5e8;
+}
+
+.ticket-card h3 {
+  margin-bottom: 1.35rem;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+dl {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid #edf0f5;
+}
+
+dt {
+  color: #768198;
+  font-size: 0.78rem;
+}
+
+dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-align: right;
+}
+
+.ticket-id {
+  margin: auto 0 0;
+  color: #929bad;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.68rem;
+  overflow-wrap: anywhere;
+}
+
+.state-card {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  align-content: center;
+  gap: 0.45rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.state-card p {
+  max-width: 32rem;
+  margin-bottom: 0;
+  color: #68748a;
+}
+
+.state-card.error {
+  border-color: #efc6c6;
+}
+
+.state-card button {
+  margin-top: 0.8rem;
+  padding: 0.65rem 1rem;
+  color: #ffffff;
+  background: #18233d;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #dce2eb;
+  border-top-color: #319e91;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 720px) {
+  .app-header,
+  .page-intro {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .app-header {
+    padding: 1.1rem 1.5rem 1.35rem;
+  }
+
+  main {
+    width: min(100% - 2rem, 1120px);
+    padding-top: 2.5rem;
+  }
+
+  .ticket-count {
+    align-self: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

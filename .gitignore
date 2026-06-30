@@ -1,0 +1,25 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+.venv-codex/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node and Vite
+node_modules/
+dist/
+.vite/
+
+# Vercel
+.vercel/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
